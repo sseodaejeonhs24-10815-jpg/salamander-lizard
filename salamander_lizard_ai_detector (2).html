@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 도롱뇽 & 도마뱀 AI 탐지기 🦎🌿</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        leaf: {
+                            50: '#f2f9f1',
+                            100: '#e1f2df',
+                            200: '#c5e5c2',
+                            500: '#4caf50',
+                            600: '#388e3c',
+                            700: '#2e7d32',
+                            800: '#1b5e20',
+                        },
+                        sunshine: {
+                            50: '#fffde7',
+                            100: '#fff9c4',
+                            200: '#fff59d',
+                            300: '#ffe082',
+                            400: '#ffd54f',
+                            500: '#ffca28',
+                        }
+                    },
+                    fontFamily: {
+                        cute: ['Gowun Dodum', 'sans-serif'],
+                        title: ['Jua', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- TensorFlow.js & Teachable Machine Image Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            background-color: #f7faf5;
+            background-image: 
+                radial-gradient(#e2edd9 1.5px, transparent 1.5px),
+                radial-gradient(#e2edd9 1.5px, #f7faf5 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .font-title {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* Floating background leaf animation */
+        @keyframes floatLeaf {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(6deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .floating-leaf {
+            animation: floatLeaf 4s ease-in-out infinite;
+        }
+
+        /* Pulse glow for sunlight effect */
+        @keyframes sunGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .sun-glow {
+            animation: sunGlow 6s ease-in-out infinite;
+        }
+
+        /* Glassmorphism custom card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(225, 242, 223, 0.8);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f8ee;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a3d99b;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 flex flex-col justify-between relative overflow-x-hidden">
+
+    <!-- Decorative Sunlight Ambient Background -->
+    <div class="fixed -top-24 -left-24 w-96 h-96 bg-sunshine-200/60 rounded-full blur-3xl pointer-events-none sun-glow"></div>
+    <div class="fixed top-1/3 -right-20 w-80 h-80 bg-leaf-200/50 rounded-full blur-3xl pointer-events-none floating-leaf"></div>
+
+    <!-- Decorative Leaf Elements -->
+    <div class="fixed top-8 left-8 text-leaf-500/20 text-5xl pointer-events-none floating-leaf" style="animation-delay: 0s;">
+        <i class="fa-solid fa-leaf"></i>
+    </div>
+    <div class="fixed top-24 right-12 text-leaf-600/20 text-4xl pointer-events-none floating-leaf" style="animation-delay: 1.5s;">
+        <i class="fa-solid fa-seedling"></i>
+    </div>
+    <div class="fixed bottom-12 left-12 text-sunshine-400/30 text-6xl pointer-events-none floating-leaf" style="animation-delay: 0.8s;">
+        <i class="fa-solid fa-sun"></i>
+    </div>
+
+    <!-- Main Header -->
+    <header class="relative z-10 w-full max-w-4xl mx-auto px-4 pt-8 pb-4 text-center">
+        <div class="inline-flex items-center gap-2 bg-leaf-100 text-leaf-800 px-4 py-1.5 rounded-full text-sm font-semibold mb-3 shadow-sm border border-leaf-200">
+            <i class="fa-solid fa-sun text-amber-500 animate-spin" style="animation-duration: 12s;"></i>
+            <span>자연을 닮은 AI 스캐너</span>
+            <i class="fa-solid fa-leaf text-leaf-600"></i>
+        </div>
+        
+        <h1 class="text-3xl md:text-5xl font-title text-leaf-800 mb-3 tracking-wide drop-shadow-sm">
+            🦎 도롱뇽 & 도마뱀 AI 탐지기 🌿
+        </h1>
+        
+        <p class="text-base md:text-lg text-gray-600 max-w-xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-leaf-100 shadow-sm">
+            귀여운 <strong class="text-leaf-700">도롱뇽</strong>이나 <strong class="text-emerald-700">도마뱀</strong> 친구들의 모습을 보여주세요!<br class="hidden sm:inline">
+            카메라에 비추거나 사진을 올려주시면 AI가 바로 감지합니다. ✨
+        </p>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="relative z-10 w-full max-w-4xl mx-auto px-4 py-4 flex-grow">
+        
+        <!-- AI Model Loading Status Box -->
+        <div id="modelStatusCard" class="glass-card rounded-3xl p-5 mb-6 text-center border shadow-lg transition-all duration-300">
+            <div id="statusLoading" class="flex flex-col items-center justify-center gap-3 py-2">
+                <div class="relative w-12 h-12 flex items-center justify-center">
+                    <i class="fa-solid fa-circle-notch animate-spin text-3xl text-leaf-600"></i>
+                    <i class="fa-solid fa-paw text-xs text-amber-500 absolute"></i>
+                </div>
+                <div>
+                    <h3 class="font-title text-lg text-leaf-800">AI 모델을 숲에서 불러오는 중입니다...</h3>
+                    <p class="text-xs text-gray-500">잠시만 기다려주세요! (약 2~5초 소요)</p>
+                </div>
+            </div>
+
+            <div id="statusReady" class="hidden flex items-center justify-center gap-2 text-leaf-700 font-semibold py-1">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                <span>AI 모델 준비 완료! 준비된 도롱뇽/도마뱀을 보여주세요.</span>
+            </div>
+        </div>
+
+        <!-- Interactive Detector Layout (Grid) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Side: Input Area (Camera / Upload) -->
+            <div class="lg:col-span-7 glass-card rounded-3xl p-5 shadow-xl border border-leaf-200">
+                
+                <!-- Tabs: Live Camera vs Photo Upload -->
+                <div class="flex bg-leaf-50 p-1.5 rounded-2xl mb-5 border border-leaf-200/70">
+                    <button id="tabCamBtn" onclick="switchTab('cam')" 
+                        class="flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 bg-white text-leaf-800 shadow-md">
+                        <i class="fa-solid fa-camera text-leaf-600"></i>
+                        <span>실시간 카메라</span>
+                    </button>
+                    <button id="tabUploadBtn" onclick="switchTab('upload')" 
+                        class="flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 text-gray-600 hover:text-leaf-800">
+                        <i class="fa-solid fa-image text-amber-500"></i>
+                        <span>사진 업로드</span>
+                    </button>
+                </div>
+
+                <!-- Mode 1: Webcam View Area -->
+                <div id="camSection" class="flex flex-col items-center">
+                    <div class="relative w-full aspect-square max-w-md bg-leaf-900/10 rounded-2xl overflow-hidden border-2 border-dashed border-leaf-300 flex items-center justify-center shadow-inner group">
+                        
+                        <!-- Placeholder before camera starts -->
+                        <div id="webcamPlaceholder" class="flex flex-col items-center justify-center p-6 text-center text-gray-500">
+                            <div class="w-16 h-16 rounded-full bg-leaf-100 flex items-center justify-center text-leaf-600 text-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-video"></i>
+                            </div>
+                            <p class="font-title text-base text-gray-700 mb-1">카메라 연결 대기 중</p>
+                            <p class="text-xs text-gray-500 mb-4">아래 버튼을 눌러 카메라를 켜주세요</p>
+                            <button onclick="startWebcam()" class="bg-leaf-600 hover:bg-leaf-700 text-white font-title px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-leaf-600/30 transition-all flex items-center gap-2 active:scale-95">
+                                <i class="fa-solid fa-power-off"></i>
+                                <span>카메라 시작하기</span>
+                            </button>
+                        </div>
+
+                        <!-- Webcam Canvas Container -->
+                        <div id="webcamContainer" class="hidden w-full h-full flex items-center justify-center bg-black"></div>
+
+                        <!-- Floating Live Indicator Badge -->
+                        <div id="liveBadge" class="hidden absolute top-3 left-3 bg-red-500/90 text-white text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md">
+                            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                            <span>LIVE</span>
+                        </div>
+                    </div>
+
+                    <!-- Camera Action Controls -->
+                    <div id="camControls" class="hidden mt-4 flex flex-wrap gap-2 justify-center w-full">
+                        <button onclick="flipCamera()" class="bg-white hover:bg-leaf-50 text-leaf-800 border border-leaf-200 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>카메라 전환</span>
+                        </button>
+                        <button onclick="stopWebcam()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-stop"></i>
+                            <span>카메라 끄기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Photo Upload Area -->
+                <div id="uploadSection" class="hidden flex-col items-center">
+                    <div id="dropZone" 
+                        onclick="document.getElementById('imageFileInput').click()"
+                        ondragover="handleDragOver(event)"
+                        ondragleave="handleDragLeave(event)"
+                        ondrop="handleDrop(event)"
+                        class="relative w-full aspect-square max-w-md bg-amber-50/50 hover:bg-amber-100/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-200 group shadow-inner">
+                        
+                        <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+
+                        <!-- Upload Prompt -->
+                        <div id="uploadPrompt" class="flex flex-col items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-sunshine-200 flex items-center justify-center text-amber-700 text-2xl mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <p class="font-title text-lg text-gray-800 mb-1">도롱뇽 / 도마뱀 사진 올리기</p>
+                            <p class="text-xs text-gray-500 mb-3">클릭하거나 사진을 이곳으로 드래그하세요</p>
+                            <span class="inline-block bg-white text-amber-800 font-semibold text-xs px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm">
+                                PNG, JPG, WEBP 이미지 지원
+                            </span>
+                        </div>
+
+                        <!-- Uploaded Image Preview -->
+                        <img id="imagePreview" class="hidden w-full h-full object-contain rounded-xl" alt="미리보기 이미지" />
+                    </div>
+
+                    <!-- Sample Presets / Reset button -->
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="triggerFileSelect()" class="bg-sunshine-300 hover:bg-sunshine-400 text-amber-900 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>다른 사진 선택</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Side: AI Prediction Results -->
+            <div class="lg:col-span-5 glass-card rounded-3xl p-5 shadow-xl border border-leaf-200 flex flex-col justify-between min-h-[420px]">
+                
+                <div>
+                    <!-- Section Title -->
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-leaf-100">
+                        <h2 class="font-title text-xl text-leaf-800 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                            <span>AI 감지 결과</span>
+                        </h2>
+                        <span id="confidenceBadge" class="bg-leaf-100 text-leaf-800 text-xs font-bold px-2.5 py-1 rounded-full border border-leaf-200">
+                            대기 중
+                        </span>
+                    </div>
+
+                    <!-- Top Match Banner Card -->
+                    <div id="topResultCard" class="bg-gradient-to-br from-leaf-100 via-sunshine-100 to-emerald-50 p-4 rounded-2xl border border-leaf-200 mb-5 text-center shadow-sm relative overflow-hidden">
+                        <div class="text-xs text-leaf-700 font-semibold mb-1">가장 가능성이 높은 친구</div>
+                        <div id="topResultLabel" class="font-title text-2xl md:text-3xl text-leaf-900 tracking-wide my-1">
+                            🧐 감지 대기 중...
+                        </div>
+                        <div id="topResultScore" class="text-sm font-bold text-emerald-700">
+                            카메라나 사진을 통해 확인해 보세요
+                        </div>
+                    </div>
+
+                    <!-- All Predictions Bar Chart Container -->
+                    <div class="space-y-3" id="labelContainer">
+                        <p class="text-xs text-gray-400 text-center py-6">
+                            <i class="fa-solid fa-leaf text-leaf-300 text-2xl block mb-2"></i>
+                            모델이 불러와지면 분류 항목별 확률이 여기에 표시됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cute Nature Information Card -->
+                <div class="mt-6 bg-sunshine-50 p-3.5 rounded-2xl border border-sunshine-200 text-xs text-amber-900 flex items-start gap-3">
+                    <div class="text-amber-500 text-lg mt-0.5">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <strong class="font-title text-sm block text-amber-900 mb-0.5">알고 계셨나요? 🌿</strong>
+                        도롱뇽은 피부로 호흡하는 <strong class="underline decoration-amber-300">양서류</strong>이고, 도마뱀은 비늘을 가진 <strong class="underline decoration-amber-300">파충류</strong>랍니다! 촉촉한 곳에서는 도롱뇽을 만나기 쉬워요.
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 w-full text-center py-6 text-xs text-gray-500 bg-white/40 border-t border-leaf-100 mt-8">
+        <p class="flex items-center justify-center gap-1.5 mb-1">
+            <span>햇살과 풀잎을 담은 자연친화적 AI 탐지기</span>
+            <i class="fa-solid fa-heart text-rose-400"></i>
+        </p>
+        <p class="text-gray-400">Powered by Teachable Machine & TensorFlow.js</p>
+    </footer>
+
+    <!-- Notification Toast Modal -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-amber-400"></i>
+        <span id="toastMsg">메시지 내용</span>
+    </div>
+
+    <script>
+        // Teachable Machine Model Settings
+        const MODEL_URL = "https://teachablemachine.withgoogle.com/models/dekA1zjfk/";
+        
+        let model, webcam, labelContainer, maxPredictions;
+        let isWebcamRunning = false;
+        let currentFacingMode = "user"; // 'user' (front) or 'environment' (back)
+        let animationFrameId = null;
+
+        // Color palette for result bars
+        const BAR_COLORS = [
+            { bg: 'bg-emerald-500', light: 'bg-emerald-100', text: 'text-emerald-800' },
+            { bg: 'bg-amber-500', light: 'bg-amber-100', text: 'text-amber-800' },
+            { bg: 'bg-teal-500', light: 'bg-teal-100', text: 'text-teal-800' },
+            { bg: 'bg-lime-500', light: 'bg-lime-100', text: 'text-lime-800' },
+            { bg: 'bg-yellow-500', light: 'bg-yellow-100', text: 'text-yellow-800' }
+        ];
+
+        // Helper function to format class names nicely (converts "Class 1", "Class 2" to "도롱뇽" / "도마뱀")
+        function getFriendlyClassName(rawName, index) {
+            if (!rawName) {
+                return index === 0 ? "도롱뇽 🦎" : "도마뱀 🌿";
+            }
+            
+            const lower = rawName.trim().toLowerCase();
+            
+            // Direct matches
+            if (lower.includes("salamander") || lower.includes("도롱뇽")) {
+                return "도롱뇽 🦎";
+            }
+            if (lower.includes("lizard") || lower.includes("도마뱀")) {
+                return "도마뱀 🌿";
+            }
+            
+            // Override default Teachable Machine generic names ("Class 1", "Class 2", "클래스 1", etc.)
+            if (lower.startsWith("class") || lower.startsWith("클래스")) {
+                return index === 0 ? "도롱뇽 🦎" : (index === 1 ? "도마뱀 🌿" : `친구 ${index + 1}`);
+            }
+
+            return rawName;
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initModel();
+        });
+
+        // Load the Teachable Machine Model
+        async function initModel() {
+            try {
+                const modelURL = MODEL_URL + "model.json";
+                const metadataURL = MODEL_URL + "metadata.json";
+
+                // Load model and metadata
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                // Setup result elements
+                setupLabelContainer();
+
+                // UI Status Update
+                document.getElementById('statusLoading').classList.add('hidden');
+                document.getElementById('statusReady').classList.remove('hidden');
+                document.getElementById('modelStatusCard').classList.add('border-emerald-300', 'bg-emerald-50/40');
+                
+                showToast("🌿 AI 모델이 성공적으로 로드되었습니다!", "fa-circle-check text-emerald-400");
+            } catch (error) {
+                console.error("Model Load Error:", error);
+                document.getElementById('statusLoading').innerHTML = `
+                    <div class="text-rose-600 font-semibold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                        <span>AI 모델을 불러오지 못했습니다. 네트워크 연결을 확인해주세요.</span>
+                    </div>
+                `;
+                showToast("모델을 불러올 수 없습니다.", "fa-circle-exclamation text-rose-400");
+            }
+        }
+
+        // Build prediction progress bars container
+        function setupLabelContainer() {
+            labelContainer = document.getElementById("labelContainer");
+            labelContainer.innerHTML = ""; // Clear loader text
+
+            const labels = (model && model.getClassLabels) ? model.getClassLabels() : [];
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const colorScheme = BAR_COLORS[i % BAR_COLORS.length];
+                const rawName = labels[i] || "";
+                const displayName = getFriendlyClassName(rawName, i);
+                
+                const wrapper = document.createElement("div");
+                wrapper.className = "bg-white p-3.5 rounded-2xl border border-leaf-100 shadow-sm transition-all";
+                wrapper.id = `classCard-${i}`;
+
+                wrapper.innerHTML = `
+                    <div class="flex justify-between items-center mb-1.5 text-sm">
+                        <span class="font-bold text-gray-800 flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-full ${colorScheme.bg}"></span>
+                            <span id="className-${i}">${displayName}</span>
+                        </span>
+                        <span id="classPercent-${i}" class="font-title text-base text-gray-700">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-3.5 rounded-full overflow-hidden p-0.5">
+                        <div id="classBar-${i}" class="h-full rounded-full ${colorScheme.bg} transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                `;
+                labelContainer.appendChild(wrapper);
+            }
+        }
+
+        // Start Webcam Stream
+        async function startWebcam() {
+            if (!model) {
+                showToast("모델이 아직 준비되지 않았습니다. 잠시만 기다려주세요.", "fa-clock");
+                return;
+            }
+
+            try {
+                showToast("카메라 권한을 확인하는 중입니다...", "fa-camera");
+                const flip = currentFacingMode === "user";
+                webcam = new tmImage.Webcam(400, 400, flip); // width, height, flip
+                
+                await webcam.setup({ facingMode: currentFacingMode });
+                await webcam.play();
+                
+                isWebcamRunning = true;
+
+                // Update UI elements
+                document.getElementById("webcamPlaceholder").classList.add("hidden");
+                const webcamContainer = document.getElementById("webcamContainer");
+                webcamContainer.classList.remove("hidden");
+                webcamContainer.innerHTML = "";
+                webcamContainer.appendChild(webcam.canvas);
+                
+                // Styling the canvas to responsive square
+                webcam.canvas.className = "w-full h-full object-cover rounded-xl";
+
+                document.getElementById("liveBadge").classList.remove("hidden");
+                document.getElementById("camControls").classList.remove("hidden");
+
+                // Start prediction loop
+                window.requestAnimationFrame(webcamLoop);
+
+                showToast("카메라 탐지가 시작되었습니다!", "fa-video text-emerald-400");
+            } catch (err) {
+                console.error("Webcam Access Error:", err);
+                showToast("카메라에 접근할 수 없습니다. 권한을 허용해주세요.", "fa-triangle-exclamation text-rose-400");
+            }
+        }
+
+        // Continuous Loop for Webcam Prediction
+        async function webcamLoop() {
+            if (isWebcamRunning) {
+                webcam.update();
+                await predict(webcam.canvas);
+                animationFrameId = window.requestAnimationFrame(webcamLoop);
+            }
+        }
+
+        // Stop Webcam Stream
+        function stopWebcam() {
+            isWebcamRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            if (webcam) {
+                webcam.stop();
+            }
+
+            document.getElementById("webcamPlaceholder").classList.remove("hidden");
+            document.getElementById("webcamContainer").classList.add("hidden");
+            document.getElementById("liveBadge").classList.add("hidden");
+            document.getElementById("camControls").classList.add("hidden");
+
+            resetPredictionDisplay();
+            showToast("카메라가 정지되었습니다.", "fa-stop");
+        }
+
+        // Toggle Front / Rear Camera
+        async function flipCamera() {
+            currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+            stopWebcam();
+            setTimeout(() => {
+                startWebcam();
+            }, 300);
+        }
+
+        // File Select Handler
+        function triggerFileSelect() {
+            document.getElementById('imageFileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processUploadedImage(file);
+            }
+        }
+
+        // Drag and Drop Handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('dropZone').classList.add('bg-amber-200/50', 'border-amber-500');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('dropZone').classList.remove('bg-amber-200/50', 'border-amber-500');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('dropZone').classList.remove('bg-amber-200/50', 'border-amber-500');
+            
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                processUploadedImage(files[0]);
+            }
+        }
+
+        // Process Uploaded Image File
+        function processUploadedImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast("이미지 파일만 업로드할 수 있습니다.", "fa-circle-xmark text-rose-400");
+                return;
+            }
+
+            if (!model) {
+                showToast("AI 모델이 준비되는 중입니다. 잠시 후 다시 시도해 주세요.", "fa-clock");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imgElement = document.getElementById('imagePreview');
+                imgElement.src = e.target.result;
+                imgElement.onload = async function() {
+                    document.getElementById('uploadPrompt').classList.add('hidden');
+                    imgElement.classList.remove('hidden');
+                    
+                    // Run AI Prediction on static image
+                    await predict(imgElement);
+                    showToast("이미지 분석이 완료되었습니다!", "fa-sparkles text-amber-400");
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Run Prediction on Canvas or Image Element
+        async function predict(inputElement) {
+            if (!model) return;
+
+            // predict returns array of {className, probability}
+            const prediction = await model.predict(inputElement);
+            
+            let highestProb = -1;
+            let highestClass = "";
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const rawClassName = prediction[i].className;
+                const displayTitle = getFriendlyClassName(rawClassName, i);
+                const probability = prediction[i].probability;
+                const percentage = (probability * 100).toFixed(1);
+
+                // Update Class Labels & Bars
+                const classNameEl = document.getElementById(`className-${i}`);
+                const classPercentEl = document.getElementById(`classPercent-${i}`);
+                const classBarEl = document.getElementById(`classBar-${i}`);
+
+                if (classNameEl && classPercentEl && classBarEl) {
+                    classNameEl.innerText = displayTitle;
+                    classPercentEl.innerText = `${percentage}%`;
+                    classBarEl.style.width = `${percentage}%`;
+                }
+
+                // Track highest prediction
+                if (probability > highestProb) {
+                    highestProb = probability;
+                    highestClass = displayTitle;
+                }
+            }
+
+            // Update Top Match Banner
+            const topResultLabel = document.getElementById('topResultLabel');
+            const topResultScore = document.getElementById('topResultScore');
+            const confidenceBadge = document.getElementById('confidenceBadge');
+
+            const topPercent = (highestProb * 100).toFixed(1);
+
+            topResultLabel.innerText = highestClass || "감지 중...";
+            topResultScore.innerText = `일치율: ${topPercent}%`;
+
+            if (highestProb >= 0.75) {
+                confidenceBadge.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-300";
+                confidenceBadge.innerText = "높은 신뢰도 ✨";
+            } else if (highestProb >= 0.4) {
+                confidenceBadge.className = "bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-300";
+                confidenceBadge.innerText = "보통 신뢰도 🌱";
+            } else {
+                confidenceBadge.className = "bg-gray-100 text-gray-700 text-xs font-bold px-2.5 py-1 rounded-full border border-gray-300";
+                confidenceBadge.innerText = "불확실함 🤔";
+            }
+        }
+
+        // Reset display state
+        function resetPredictionDisplay() {
+            document.getElementById('topResultLabel').innerText = "🧐 감지 대기 중...";
+            document.getElementById('topResultScore').innerText = "카메라나 사진을 통해 확인해 보세요";
+            document.getElementById('confidenceBadge').innerText = "대기 중";
+            document.getElementById('confidenceBadge').className = "bg-leaf-100 text-leaf-800 text-xs font-bold px-2.5 py-1 rounded-full border border-leaf-200";
+
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPercentEl = document.getElementById(`classPercent-${i}`);
+                const classBarEl = document.getElementById(`classBar-${i}`);
+                if (classPercentEl && classBarEl) {
+                    classPercentEl.innerText = "0%";
+                    classBarEl.style.width = "0%";
+                }
+            }
+        }
+
+        // Switch between Live Cam and Upload tabs
+        function switchTab(mode) {
+            const camSection = document.getElementById('camSection');
+            const uploadSection = document.getElementById('uploadSection');
+            const tabCamBtn = document.getElementById('tabCamBtn');
+            const tabUploadBtn = document.getElementById('tabUploadBtn');
+
+            if (mode === 'cam') {
+                camSection.classList.remove('hidden');
+                camSection.classList.add('flex');
+                uploadSection.classList.add('hidden');
+                uploadSection.classList.remove('flex');
+
+                tabCamBtn.className = "flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 bg-white text-leaf-800 shadow-md";
+                tabUploadBtn.className = "flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 text-gray-600 hover:text-leaf-800";
+            } else {
+                // Stop webcam if running
+                if (isWebcamRunning) {
+                    stopWebcam();
+                }
+
+                camSection.classList.add('hidden');
+                camSection.classList.remove('flex');
+                uploadSection.classList.remove('hidden');
+                uploadSection.classList.add('flex');
+
+                tabUploadBtn.className = "flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 bg-white text-leaf-800 shadow-md";
+                tabCamBtn.className = "flex-1 py-2.5 px-4 rounded-xl font-title text-sm md:text-base transition-all duration-200 flex items-center justify-center gap-2 text-gray-600 hover:text-leaf-800";
+            }
+            resetPredictionDisplay();
+        }
+
+        // Show toast feedback notification
+        let toastTimeout;
+        function showToast(message, iconClass = "fa-circle-info") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = message;
+            toastIcon.className = `fa-solid ${iconClass}`;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
